@@ -1,0 +1,39 @@
+// ==UserScript==
+// @name         Grid API Fix
+// @namespace    http://tampermonkey.net/
+// @version      2025-12-11
+// @description  Fix all their broken links
+// @author       You
+// @match        *.grid.gg/*
+// @icon         https://www.google.com/s2/favicons?sz=64&domain=grid.gg
+// @grant        none
+// @run-at       document-end
+// ==/UserScript==
+
+(function () {
+    const fixLinks = () => {
+        document.querySelectorAll('a[href^="#"]').forEach(a => {
+            const h = a.getAttribute("href");
+            a.href = h.toLowerCase();
+        });
+    };
+
+    new MutationObserver(fixLinks)
+        .observe(document.documentElement, { childList: true, subtree: true });
+
+    const hook = type => {
+        const orig = history[type];
+        history[type] = function () {
+            const r = orig.apply(this, arguments);
+            fixLinks();
+            return r;
+        };
+    };
+
+    hook("pushState");
+    hook("replaceState");
+
+    window.addEventListener("popstate", fixLinks);
+
+    window.addEventListener("load", fixLinks);
+})();
